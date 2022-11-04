@@ -78,9 +78,9 @@ struct Color {
     /// - Returns: A random additive color
     ///
     static func random() -> Color {
-        let red = cs_arc4random_uniform(2) == 0 ? 0xFFFF : 0
-        let green = cs_arc4random_uniform(2) == 0 ? 0xFFFF : 0
-        let blue = cs_arc4random_uniform(2) == 0 ? 0xFFFF : 0
+        let red = cs_arc4random_uniform(upperBound: 2) == 0 ? 0xFFFF : 0
+        let green = cs_arc4random_uniform(upperBound: 2) == 0 ? 0xFFFF : 0
+        let blue = cs_arc4random_uniform(upperBound: 2) == 0 ? 0xFFFF : 0
         return Color(red: red, green: green, blue: blue)
     }
 }
@@ -161,19 +161,19 @@ struct ScreenWindow {
     ///
     /// The internal X11 window
     ///
-    private let xWindow: Window
+    let xWindow: Window
     ///
     /// The internal X11 display
     ///
-    private let xDisplay: _XPrivDisplay
+    let xDisplay: _XPrivDisplay
     ///
     /// The internal X11 graphic's content
     ///
-    private let xContext: GC
+    let xContext: GC
     ///
     /// The internal X11 event handler value
     ///
-    private let xEvent: UnsafeMutablePointer<_XEvent> = UnsafeMutablePointer<_XEvent>.alloc(1)
+    private let xEvent: UnsafeMutablePointer<_XEvent> = UnsafeMutablePointer<_XEvent>.allocate(capacity: 1)
     ///
     /// The internal X11 colormap used for colors
     ///
@@ -184,7 +184,7 @@ struct ScreenWindow {
     ///
     var nextEvent: WindowEvent {
         XNextEvent(xDisplay, xEvent)
-        return WindowEvent(xEvent.memory.type)
+        return xEvent.pointee.type
     }
 
     ///
@@ -199,7 +199,7 @@ struct ScreenWindow {
             fatalError("Cannot open display")
         }
         let xScreen = XDefaultScreenOfDisplay(xDisplay)
-        let rootWindow = xScreen.memory.root
+        let rootWindow = xScreen!.pointee.root
         let blackColor = XBlackPixel(xDisplay, XDefaultScreen(xDisplay))
         let whiteColor = XWhitePixel(xDisplay, XDefaultScreen(xDisplay))
         
@@ -230,9 +230,9 @@ struct ScreenWindow {
         XSetWMProtocols(xDisplay, xWindow, &atom, 1);
         
         // Bind locals to fields
-        self.xDisplay = xDisplay
+        self.xDisplay = xDisplay!
         self.xWindow = xWindow
-        self.xContext = xContext
+        self.xContext = xContext!
         self.xColormap = XDefaultColormap(xDisplay, XDefaultScreen(xDisplay))
     }
     
@@ -264,8 +264,8 @@ struct ScreenWindow {
     /// - Parameter shape: The shape to draw
     ///
     func draw(shape: Shape) {
-        setForeground(shape.color)
-        shape.draw(self)
+        setForeground(color: shape.color)
+        shape.draw(window: self)
     }
 }
 
@@ -285,7 +285,7 @@ func drawSquares() {
                                   filled: true,
                                   position: (j*100,k*100),
                                   size: (100,100))
-            window.draw(shape)
+            window.draw(shape: shape)
         }
     }
 }

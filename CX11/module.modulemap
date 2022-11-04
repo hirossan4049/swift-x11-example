@@ -1,10 +1,12 @@
 module CX11 [system] {
     module Xlib {
-        header "/usr/local/include/X11/Xlib.h"
+        header "/opt/X11/include/X11/Xlib.h"
     }
     module X {
-        header "/usr/local/include/X11/X.h"
+        header "/opt/X11/include/X11/X.h"
     }
     link "X11"
+    umbrella header "cx11.h"
+    export *
 }
 
